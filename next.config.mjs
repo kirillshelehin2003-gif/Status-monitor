@@ -8,6 +8,10 @@ const nextConfig = {
   outputFileTracingRoot: projectRoot,
   eslint: {
     ignoreDuringBuilds: true
+  },
+  webpack: (config) => {
+    config.resolve.alias["@"] = path.resolve(projectRoot, "src");
+    return config;
   }
 };
 
