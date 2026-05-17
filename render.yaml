@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: status-monitor-web
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci && npm run build
+    preDeployCommand: npm run db:init
+    startCommand: npm run start:render
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONITOR_INTERVAL_SECONDS
+        value: "60"
+      - key: MONITOR_USE_DEV_SIGNALS
+        value: "false"
+      - key: HTTP_CHECK_TIMEOUT_MS
+        value: "6000"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: status-monitor-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: status-monitor-cache
+          property: connectionString
+
+  - type: keyvalue
+    name: status-monitor-cache
+    plan: free
+    region: frankfurt
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
+
+databases:
+  - name: status-monitor-db
+    plan: free
+    region: frankfurt
+    databaseName: status_monitor
+    postgresMajorVersion: "16"
+    ipAllowList: []

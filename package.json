@@ -1,0 +1,49 @@
+{
+  "name": "service-status-monitor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n web,worker -c magenta,blue \"next dev\" \"tsx src/server/worker.ts\"",
+    "dev:web": "next dev",
+    "worker": "tsx src/server/worker.ts",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "start:render": "concurrently -k -n web,worker -c magenta,blue \"next start -p ${PORT:-10000}\" \"tsx src/server/worker.ts\"",
+    "lint": "next lint",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:init": "prisma db push && tsx scripts/seed-if-empty.ts",
+    "db:reset-runtime": "tsx scripts/reset-runtime-data.ts",
+    "db:seed": "tsx prisma/seed.ts",
+    "studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "ioredis": "^5.4.1",
+    "lucide-react": "^0.468.0",
+    "next": "^15.0.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "recharts": "^2.13.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "concurrently": "^9.1.0",
+    "eslint": "^9.15.0",
+    "eslint-config-next": "^15.0.3",
+    "prisma": "^5.22.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}

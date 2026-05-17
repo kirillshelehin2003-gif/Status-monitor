@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ServiceStatus {
+  operational
+  partial_outage
+  major_outage
+  unknown
+}
+
+enum ServiceCategory {
+  games
+  social
+  messenger
+  video
+  finance
+  cloud
+  search
+  marketplace
+  other
+}
+
+enum CheckSource {
+  http_health
+  api_endpoint
+  official_status
+  google_trends
+  user_reports
+  rss_social
+  manual_admin
+  dev_mock
+}
+
+enum IncidentSource {
+  automatic
+  manual
+  external
+}
+
+model Service {
+  id                String          @id @default(cuid())
+  name              String
+  slug              String          @unique
+  category          ServiceCategory
+  description       String
+  homepageUrl       String?
+  statusPageUrl     String?
+  healthCheckUrl    String?
+  apiCheckUrl       String?
+  regions           String[]        @default([])
+  enabled           Boolean         @default(true)
+  mockSignalProfile Json?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  checks            HealthCheck[]
+  incidents         Incident[]
+  reports           UserReport[]
+  trends            SearchTrend[]
+  overrides         ManualOverride[]
+  logs              CheckLog[]
+
+  @@index([category])
+  @@index([enabled])
+}
+
+model HealthCheck {
+  id                 String        @id @default(cuid())
+  serviceId          String
+  source             CheckSource
+  checkedAt          DateTime      @default(now())
+  status             ServiceStatus
+  latencyMs          Int?
+  availability       Float
+  problemScore       Float
+  confidence         Float
+  affectedRegions    String[]      @default([])
+  suspectedReasons   String[]      @default([])
+  message            String
+  raw                Json?
+
+  service            Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId, checkedAt])
+  @@index([status])
+}
+
+model Incident {
+  id                String          @id @default(cuid())
+  serviceId         String
+  title             String
+  status            ServiceStatus
+  source            IncidentSource
+  startedAt         DateTime
+  resolvedAt        DateTime?
+  affectedRegions   String[]        @default([])
+  suspectedReasons  String[]        @default([])
+  summary           String
+
+  service           Service         @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId, startedAt])
+  @@index([resolvedAt])
+}
+
+model UserReport {
+  id          String   @id @default(cuid())
+  serviceId   String
+  region      String?
+  reason      String
+  message     String?
+  createdAt   DateTime @default(now())
+
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId, createdAt])
+}
+
+model SearchTrend {
+  id          String   @id @default(cuid())
+  serviceId   String
+  query       String
+  score       Int
+  source      String
+  capturedAt  DateTime @default(now())
+
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId, capturedAt])
+}
+
+model ManualOverride {
+  id          String        @id @default(cuid())
+  serviceId   String
+  status      ServiceStatus
+  reason      String
+  regions     String[]      @default([])
+  startsAt    DateTime      @default(now())
+  endsAt      DateTime?
+  createdBy   String        @default("admin")
+  createdAt   DateTime      @default(now())
+
+  service     Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId, startsAt, endsAt])
+}
+
+model CheckLog {
+  id          String   @id @default(cuid())
+  serviceId   String?
+  level       String
+  source      String
+  message     String
+  meta        Json?
+  createdAt   DateTime @default(now())
+
+  service     Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+
+  @@index([serviceId, createdAt])
+  @@index([level])
+}
