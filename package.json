@@ -3,13 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "concurrently -k -n web,worker -c magenta,blue \"next dev\" \"tsx src/server/worker.ts\"",
+    "dev:render": "next dev -p ${PORT:-10000}",
     "dev:web": "next dev",
     "worker": "tsx src/server/worker.ts",
     "build": "prisma generate && next build",
     "start": "next start",
-    "start:render": "concurrently -k -n web,worker -c magenta,blue \"next start -p ${PORT:-10000}\" \"tsx src/server/worker.ts\"",
+    "start:render": "next start -p ${PORT:-10000}",
     "lint": "next lint",
     "test": "node --import tsx --test tests/*.test.ts",
     "db:generate": "prisma generate",
